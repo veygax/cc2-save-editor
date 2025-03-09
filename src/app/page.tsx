@@ -175,38 +175,39 @@ export default function Home() {
               </TabsContent>
             </Tabs>
           </header>
+          
+          <footer className="py-2 text-center text-sm text-muted-foreground border-t mt-8">
+            <p>
+              made in 1 hour with ❤️ by{" "}
+              <Link 
+                href="https://veygax.dev" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="font-medium hover:underline text-blue-600 dark:text-blue-400"
+              >
+                VeygaX :&#41;
+              </Link>
+              {" "}
+              <span className="font-bold">|</span>
+              {" it's open source btw, "}
+              {process.env.NEXT_PUBLIC_COMMIT_HASH ? (
+                <>
+                  {"current commit: "}
+                  <Link
+                    href={`https://github.com/veygax/cc2-save-editor/commit/${process.env.NEXT_PUBLIC_COMMIT_HASH}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium hover:underline text-blue-600 dark:text-blue-400"
+                  >
+                    {process.env.NEXT_PUBLIC_COMMIT_HASH}
+                  </Link>
+                </>
+              ) : (
+                <span className="italic">current commit: you&apos;re running this locally aren&apos;t you.</span>
+              )}
+            </p>
+          </footer>
         </div>
-        <footer className="py-6 mt-12 text-center text-sm text-muted-foreground border-t">
-          <p>
-            made in 1 hour with ❤️ by{" "}
-            <Link 
-              href="https://veygax.dev" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="font-medium hover:underline text-blue-600 dark:text-blue-400"
-            >
-              VeygaX :)
-            </Link>
-            {" "}
-            <span className="font-bold">|</span>
-            {" it's open source btw, "}
-            {process.env.NEXT_PUBLIC_COMMIT_HASH ? (
-              <>
-                {"current commit: "}
-                <Link
-                  href={`https://github.com/veygax/cc2-save-editor/commit/${process.env.NEXT_PUBLIC_COMMIT_HASH}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium hover:underline text-blue-600 dark:text-blue-400"
-                >
-                  {process.env.NEXT_PUBLIC_COMMIT_HASH}
-                </Link>
-              </>
-            ) : (
-              <span className="italic">current commit: you&apos;re running this locally aren&apos;t you.</span>
-            )}
-          </p>
-        </footer>
         <Toaster />
       </main>
     </ThemeProvider>
