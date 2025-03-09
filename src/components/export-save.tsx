@@ -25,7 +25,7 @@ export function ExportSave({ saveData, lzw_encode }: ExportSaveProps) {
 
       const encoded = lzw_encode(JSON.stringify(saveData))
       setEncodedSave(encoded)
-    } catch (error) {
+    } catch {
       toast("Export error", {
         description: "Failed to encode save data.",
       })

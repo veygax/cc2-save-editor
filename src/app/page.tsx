@@ -28,7 +28,7 @@ export default function Home() {
           description: "Your save data was already in JSON format and has been loaded.",
         });
         return;
-      } catch (jsonError) {
+      } catch {
         decoded = JSON.parse(lzw_decode(saveString));
         setSaveData(decoded);
         setOriginalSave(saveString);
@@ -36,7 +36,7 @@ export default function Home() {
           description: "Your save data has been decoded and loaded.",
         });
       }
-    } catch (error) {
+    } catch {
       toast("Import failed", {
         description: "The save data could not be decoded. Please check the format."
       });
@@ -203,7 +203,7 @@ export default function Home() {
                 </Link>
               </>
             ) : (
-              <span className="italic">current commit: you're running this locally aren't you.</span>
+              <span className="italic">current commit: you&apos;re running this locally aren&apos;t you.</span>
             )}
           </p>
         </footer>
