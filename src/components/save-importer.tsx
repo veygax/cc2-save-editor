@@ -31,12 +31,12 @@ export function SaveImporter({ onImport }: SaveImporterProps) {
     <Card className="border border-blue-200">
       <CardHeader>
         <CardTitle>Import Save</CardTitle>
-        <CardDescription>Paste your encoded save data or upload a save file</CardDescription>
+        <CardDescription>Paste your encoded/decoded save data or upload a save file</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4">
           <Textarea
-            placeholder="Paste your encoded save data here..."
+            placeholder="paste your encoded or decoded json (idc) save data here..."
             className="min-h-[150px] font-mono text-xs"
             value={saveString}
             onChange={(e) => setSaveString(e.target.value)}
