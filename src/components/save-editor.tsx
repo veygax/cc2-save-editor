@@ -81,7 +81,7 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
           <TabsContent value="basic" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="money">Money (€)</Label>
+                <Label htmlFor="money">Money ($ in cents)</Label>
                 <Input
                   id="money"
                   type="number"
