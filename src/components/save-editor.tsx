@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Plus, Trash2, Save, FileX } from "lucide-react"
+import { Plus, Trash2, Save, FileX, Undo2, Redo2, X } from "lucide-react"
+import { toast } from "sonner"
 
 interface SaveEditorProps {
   saveData: any
@@ -19,6 +20,55 @@ interface SaveEditorProps {
 export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
   const [editedSave, setEditedSave] = useState({ ...saveData })
   const [newItem, setNewItem] = useState("")
+  const [history, setHistory] = useState<any[]>([{ ...saveData }])
+  const [historyIndex, setHistoryIndex] = useState(0)
+
+  // Add to history when editedSave changes
+  const addToHistory = useCallback((newState: any) => {
+    // Only add to history if the state is different from the current one
+    if (JSON.stringify(newState) !== JSON.stringify(history[historyIndex])) {
+      const newHistory = history.slice(0, historyIndex + 1)
+      newHistory.push({ ...newState })
+      setHistory(newHistory)
+      setHistoryIndex(newHistory.length - 1)
+    }
+  }, [history, historyIndex])
+
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      setHistoryIndex(historyIndex - 1)
+      setEditedSave({ ...history[historyIndex - 1] })
+      toast("Undo successful", { description: "Previous change has been undone" })
+    }
+  }, [history, historyIndex])
+
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      setHistoryIndex(historyIndex + 1)
+      setEditedSave({ ...history[historyIndex + 1] })
+      toast("Redo successful", { description: "Change has been reapplied" })
+    }
+  }, [history, historyIndex])
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault()
+        if (!e.shiftKey) {
+          undo()
+        } else {
+          redo()
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault()
+        redo()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [undo, redo])
 
   const handleChange = (path: string, value: any) => {
     const pathParts = path.split(".")
@@ -35,6 +85,7 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
 
     current[pathParts[pathParts.length - 1]] = value
     setEditedSave(newSave)
+    addToHistory(newSave)
   }
 
   const handleNumberChange = (path: string, value: string) => {
@@ -52,7 +103,7 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
         const updatedSave = { ...editedSave };
         updatedSave.inventory = newInventory;
         
-        // also add to discovered items if not already there
+        // Also add to discovered items if not already there
         const discoveredItems = updatedSave.discoveredItems || [];
         if (!discoveredItems.includes(newItem.split(" | ")[1] || newItem)) {
           const itemName = newItem.split(" | ")[1] || newItem;
@@ -60,6 +111,7 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
         }
         
         setEditedSave(updatedSave);
+        addToHistory(updatedSave);
         setNewItem("");
       }
     }
@@ -75,6 +127,20 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
       updatedSave.inventory = newInventory;
       
       setEditedSave(updatedSave);
+      addToHistory(updatedSave);
+    }
+  }
+
+  const removeDiscoveredItem = (index: number) => {
+    if (editedSave.discoveredItems && editedSave.discoveredItems.length > index) {
+      const newDiscoveredItems = [...editedSave.discoveredItems];
+      newDiscoveredItems.splice(index, 1);
+      
+      const updatedSave = { ...editedSave };
+      updatedSave.discoveredItems = newDiscoveredItems;
+      
+      setEditedSave(updatedSave);
+      addToHistory(updatedSave);
     }
   }
 
@@ -161,7 +227,7 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
             <div className="space-y-4">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Add new item (e.g. 'AWP | Dragon Lore (Factory New)'). note: be careful with this as you have to be precise with the names"
+                  placeholder="Add new item (e.g. 'AWP | Dragon Lore (Factory New)')"
                   value={newItem}
                   onChange={(e) => setNewItem(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addInventoryItem()}
@@ -204,8 +270,20 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
                     <div className="flex flex-wrap gap-2">
                       {editedSave.discoveredItems && editedSave.discoveredItems.length > 0 ? (
                         editedSave.discoveredItems.map((item: string, index: number) => (
-                          <Badge key={index} variant="secondary">
-                            {item}
+                          <Badge 
+                            key={index} 
+                            variant="secondary"
+                            className="group cursor-pointer hover:bg-secondary/80 transition-colors"
+                          >
+                            <span>{item}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-4 w-4 ml-1 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => removeDiscoveredItem(index)}
+                            >
+                              <X className="h-3 w-3 text-destructive" />
+                            </Button>
                           </Badge>
                         ))
                       ) : (
@@ -237,24 +315,47 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
           </TabsContent>
         </Tabs>
 
-        <div className="mt-6 flex justify-end space-x-2">
-          {onUnload && (
+        <div className="mt-6 flex justify-between">
+          <div className="flex space-x-2">
             <Button
-              onClick={onUnload}
-              variant="destructive"
-              className="bg-gradient-to-r from-red-700 to-red-500 hover:from-red-800 hover:to-red-600"
+              onClick={undo}
+              variant="outline"
+              size="icon"
+              disabled={historyIndex <= 0}
+              title="Undo (Ctrl+Z)"
             >
-              <FileX className="mr-2 h-4 w-4" />
-              Unload Save
+              <Undo2 className="h-4 w-4" />
             </Button>
-          )}
-          <Button
-            onClick={handleSaveChanges}
-            className="bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            Save Changes
-          </Button>
+            <Button
+              onClick={redo}
+              variant="outline"
+              size="icon"
+              disabled={historyIndex >= history.length - 1}
+              title="Redo (Ctrl+Y or Ctrl+Shift+Z)"
+            >
+              <Redo2 className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="flex space-x-2">
+            {onUnload && (
+              <Button
+                onClick={onUnload}
+                variant="destructive"
+                className="bg-gradient-to-r from-red-700 to-red-500 hover:from-red-800 hover:to-red-600"
+              >
+                <FileX className="mr-2 h-4 w-4" />
+                Unload Save
+              </Button>
+            )}
+            <Button
+              onClick={handleSaveChanges}
+              className="bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              Save Changes
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

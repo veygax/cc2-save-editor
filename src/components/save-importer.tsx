@@ -100,7 +100,6 @@ export function SaveImporter({ onImport, isMobileDevice = false }: SaveImporterP
     };
     
     const newSaveString = JSON.stringify(newSave, null, 2);
-    console.log("Created new save:", newSaveString);
     setSaveString(newSaveString);
     toast("New save created", {
       description: "A fresh save has been generated with default values."
