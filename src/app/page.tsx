@@ -73,53 +73,55 @@ export default function Home() {
   }
 
   const handleMaxStats = () => {
-  if (!saveData) return;
+    if (!saveData) return;
 
-  const maxedSave = {
-    ...saveData,
-    money: 2147483647,
-    tickets: 2147483647,
-    tokens: 2147483647,
-    xp: 2147483647,
-    upgrades: Object.keys(saveData.upgrades).reduce((acc: any, key: string) => {
-      acc[key] =
-        key === "unlockCollections" ||
-        key === "unlockStickers" ||
-        key === "unlockClickEffect2x" ||
-        key === "unlockClickEffect4x" ||
-        key === "unlockClickEffect7x"
-          ? 1
-          : 2147483647;
-      return acc;
-    }, {}),
-    stats: {
-      ...saveData.stats,
-      earned_passive: 2147483647,
-      time_played: 2147483647,
-      total_winnings: 2147483647,
-      earned_cash: 2147483647,
-      earnings_from_clicks: 2147483647,
-      earned_xp: 2147483647,
-      xp_from_clicks: 2147483647,
-      clicks: 2147483647,
-      items_discovered: 2147483647,
-      skins_discovered: 2147483647,
-      stickers_discovered: 2147483647,
-      opened_cases: 2147483647,
-      opened_rarities_2: 2147483647,
-      // Keep achievements_completed as is
-      achievements_completed: saveData.stats.achievements_completed,
-    },
+    const maxedSave = {
+      ...saveData,
+      money: 2147483647,
+      tickets: 2147483647,
+      tokens: 2147483647,
+      xp: 2147483647,
+      upgrades: Object.keys(saveData.upgrades).reduce((acc: any, key: string) => {
+        acc[key] =
+          key === "unlockCollections" ||
+          key === "unlockStickers" ||
+          key === "unlockClickEffect2x" ||
+          key === "unlockClickEffect4x" ||
+          key === "unlockClickEffect7x"
+            ? 1
+            : 2147483647;
+        return acc;
+      }, {}),
+      stats: {
+        ...saveData.stats,
+        earned_passive: 2147483647,
+        time_played: 2147483647,
+        total_winnings: 2147483647,
+        earned_cash: 2147483647,
+        earnings_from_clicks: 2147483647,
+        earned_xp: 2147483647,
+        xp_from_clicks: 2147483647,
+        clicks: 2147483647,
+        items_discovered: 2147483647,
+        skins_discovered: 2147483647,
+        stickers_discovered: 2147483647,
+        opened_cases: 2147483647,
+        opened_rarities_2: 2147483647,
+        // keep achievements_completed as is
+        achievements_completed: saveData.stats.achievements_completed,
+      },
+    };
+
+    setSaveData(null); // first set to null to force a complete re-render
+    
+    // then set the actual data in the next render cycle
+    setTimeout(() => {
+      setSaveData(maxedSave);
+      toast("Stats maxed", {
+        description: "All stats have been set to maximum values.",
+      });
+    }, 10);
   };
-
-  setSaveData(maxedSave);
-  toast("Stats maxed", {
-    description: "All stats have been set to maximum values.",
-  });
-
-  // Ensure `SaveEditor` recognizes the change
-  setTimeout(() => setSaveData({ ...maxedSave }), 0);
-};
 
   const handleSaveChanges = (updatedSave: any) => {
     setSaveData(updatedSave)
