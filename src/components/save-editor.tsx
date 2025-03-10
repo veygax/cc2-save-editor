@@ -26,7 +26,11 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
 
     let current = newSave
     for (let i = 0; i < pathParts.length - 1; i++) {
-      current = current[pathParts[i]]
+      const part = pathParts[i]
+      if (!current[part]) {
+        current[part] = {}
+      }
+      current = current[part]
     }
 
     current[pathParts[pathParts.length - 1]] = value
@@ -39,25 +43,39 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
   }
 
   const addInventoryItem = () => {
-    if (newItem.trim() && !editedSave.inventory.includes(newItem)) {
-      const newInventory = [...editedSave.inventory, newItem]
-      handleChange("inventory", newInventory)
-
-      // Also add to discovered items if not already there
-      if (!editedSave.discoveredItems.includes(newItem.split(" | ")[1] || newItem)) {
-        const itemName = newItem.split(" | ")[1] || newItem
-        const newDiscovered = [...editedSave.discoveredItems, itemName]
-        handleChange("discoveredItems", newDiscovered)
+    if (newItem.trim()) {
+      const inventory = editedSave.inventory || [];
+      
+      if (!inventory.includes(newItem)) {
+        const newInventory = [...inventory, newItem];
+        
+        const updatedSave = { ...editedSave };
+        updatedSave.inventory = newInventory;
+        
+        // also add to discovered items if not already there
+        const discoveredItems = updatedSave.discoveredItems || [];
+        if (!discoveredItems.includes(newItem.split(" | ")[1] || newItem)) {
+          const itemName = newItem.split(" | ")[1] || newItem;
+          updatedSave.discoveredItems = [...discoveredItems, itemName];
+        }
+        
+        setEditedSave(updatedSave);
+        setNewItem("");
       }
-
-      setNewItem("")
     }
   }
 
   const removeInventoryItem = (index: number) => {
-    const newInventory = [...editedSave.inventory]
-    newInventory.splice(index, 1)
-    handleChange("inventory", newInventory)
+    if (editedSave.inventory && editedSave.inventory.length > index) {
+      const newInventory = [...editedSave.inventory];
+      newInventory.splice(index, 1);
+      
+      // directly update the editedSave
+      const updatedSave = { ...editedSave };
+      updatedSave.inventory = newInventory;
+      
+      setEditedSave(updatedSave);
+    }
   }
 
   const handleSaveChanges = () => {
@@ -143,7 +161,7 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
             <div className="space-y-4">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Add new item (e.g. 'AWP | Dragon Lore (Factory New)')"
+                  placeholder="Add new item (e.g. 'AWP | Dragon Lore (Factory New)'). note: be careful with this as you have to be precise with the names"
                   value={newItem}
                   onChange={(e) => setNewItem(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addInventoryItem()}
@@ -156,7 +174,7 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
               <div className="border rounded-md">
                 <ScrollArea className="h-[300px] p-4">
                   <div className="space-y-2">
-                    {editedSave.inventory.length === 0 ? (
+                    {!editedSave.inventory || editedSave.inventory.length === 0 ? (
                       <p className="text-muted-foreground text-center py-4">No items in inventory</p>
                     ) : (
                       editedSave.inventory.map((item: string, index: number) => (
@@ -184,11 +202,15 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
                 <div className="border rounded-md p-4">
                   <ScrollArea className="h-[150px]">
                     <div className="flex flex-wrap gap-2">
-                      {editedSave.discoveredItems.map((item: string, index: number) => (
-                        <Badge key={index} variant="secondary">
-                          {item}
-                        </Badge>
-                      ))}
+                      {editedSave.discoveredItems && editedSave.discoveredItems.length > 0 ? (
+                        editedSave.discoveredItems.map((item: string, index: number) => (
+                          <Badge key={index} variant="secondary">
+                            {item}
+                          </Badge>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground text-center w-full py-4">No discovered items</p>
+                      )}
                     </div>
                   </ScrollArea>
                 </div>

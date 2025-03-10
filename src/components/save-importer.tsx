@@ -6,7 +6,7 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Upload, FileUp } from "lucide-react"
+import { Upload, FileUp, FilePlus } from "lucide-react"
 import { toast } from "sonner"
 
 interface SaveImporterProps {
@@ -29,7 +29,7 @@ export function SaveImporter({ onImport, isMobileDevice = false }: SaveImporterP
     // https://stackoverflow.com/a/53234855
     // taken from the lovely  mr jabacchetta from stackoverflow
     if (supportedExtensions.includes(extension)) {
-      // Upload as usual
+      // upload as usual
       const reader = new FileReader()
       reader.onload = (event) => {
         const content = event.target?.result as string
@@ -41,11 +41,70 @@ export function SaveImporter({ onImport, isMobileDevice = false }: SaveImporterP
         description: `Please upload a file with one of these extensions: ${supportedExtensions.join(', ')}`,
       });
       
-      // Reset input value
+      // reset input value
       e.target.value = '';
 
       return;
     }
+  }
+
+  const createNewSave = () => {
+    const newSave = {
+      "money": 0,
+      "tickets": 0,
+      "tokens": 0,
+      "xp": 0,
+      "stats": {
+        "creation": Math.floor(Date.now() / 1000), // current unix timestamp
+        "earned_passive": 0,
+        "time_played": 0,
+        "total_winnings": 0
+      },
+      "inventory": [],
+      "discoveredItems": [],
+      "upgrades": {
+        "perClick": 5,
+        "passiveIncome": 0,
+        "offlineRate": 0,
+        "offlineTime": 0,
+        "shopDiscount": 0,
+        "missionGeneration": 240,
+        "missionSlots": 3,
+        "missionRewards": 1,
+        "clickEffectsChance": 1,
+        "clickEffectsDecay": 1,
+        "clickEffectsDuration": 1,
+        "effectCashBag": 0,
+        "xpmul": 1,
+        "maxbet": 50000,
+        "shopBuy": 25,
+        "unlockCollections": 0,
+        "unlockStickers": 0,
+        "unlockClickEffect2x": 0,
+        "unlockClickEffect4x": 0,
+        "unlockClickEffect7x": 0
+      },
+      "upgradesBought": [],
+      "achievements": {},
+      "achievements_collected": {},
+      "luckyWheelWins": [],
+      "seasonTimePlayed": 0,
+      "online": {
+        "jackpotState": {},
+        "coinflipGames": {}
+      },
+      "_v": 1,
+      "_ou": {},
+      "missions": [],
+      "unlockedCapsules": []
+    };
+    
+    const newSaveString = JSON.stringify(newSave, null, 2);
+    console.log("Created new save:", newSaveString);
+    setSaveString(newSaveString);
+    toast("New save created", {
+      description: "A fresh save has been generated with default values."
+    });
   }
 
   return (
@@ -80,6 +139,14 @@ export function SaveImporter({ onImport, isMobileDevice = false }: SaveImporterP
                 onChange={handleFileUpload}
               />
             </div>
+
+            <Button
+              className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600"
+              onClick={createNewSave}
+            >
+              <FilePlus className="mr-2 h-4 w-4" />
+              New Save
+            </Button>
 
             <Button
               className="flex-1 bg-gradient-to-r from-indigo-800 to-slate-900"

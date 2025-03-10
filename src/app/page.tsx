@@ -101,7 +101,7 @@ export default function Home() {
         stickers_discovered: 2147483647,
         opened_cases: 2147483647,
         opened_rarities_2: 2147483647,
-        // Keep achievements_completed as is
+        // keep achievements_completed as is
         achievements_completed: saveData.stats.achievements_completed,
       },
     }
