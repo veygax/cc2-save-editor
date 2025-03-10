@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download, Copy, Check } from "lucide-react"
+import { Download, Copy, Check, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
 import { InfoTooltip } from "@/components/info-tooltip"
 
@@ -19,6 +19,7 @@ export function ExportSave({ saveData, lzw_encode, originalFilename }: ExportSav
   const [encodedSave, setEncodedSave] = useState("")
   const [jsonSave, setJsonSave] = useState("")
   const [copied, setCopied] = useState(false)
+  const [jsonError, setJsonError] = useState<string | null>(null)
 
   useEffect(() => {
     try {
@@ -32,7 +33,22 @@ export function ExportSave({ saveData, lzw_encode, originalFilename }: ExportSav
         description: "Failed to encode save data.",
       })
     }
-  }, [saveData, lzw_encode, toast])
+  }, [saveData, lzw_encode])
+
+  const handleJsonChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newJsonValue = e.target.value
+    setJsonSave(newJsonValue)
+    
+    try {
+      const parsedJson = JSON.parse(newJsonValue)
+      
+      const encoded = lzw_encode(JSON.stringify(parsedJson))
+      setEncodedSave(encoded)
+      setJsonError(null)
+    } catch (error) {
+      setJsonError((error as Error).message)
+    }
+  }
 
   const generateRandomHash = () => {
     const chars = "0123456789abcdefghijklmnopqrstuvwxyz"
@@ -54,9 +70,16 @@ export function ExportSave({ saveData, lzw_encode, originalFilename }: ExportSav
   }
 
   const handleDownload = (content: string, defaultFilename: string) => {
+    if (content === jsonSave && jsonError) {
+      toast("Invalid JSON", {
+        description: "Please fix the JSON errors before downloading.",
+      })
+      return
+    }
+    
     const randomHash = generateRandomHash()
     
-    // use original filename if available, otherwise use default
+
     let baseFilename
     let extension
     
@@ -70,11 +93,9 @@ export function ExportSave({ saveData, lzw_encode, originalFilename }: ExportSav
       baseFilename = filenameParts.join(".")
     }
     
-    // for JSON content, ensure extension is .json
     if (content === jsonSave) {
       extension = "json"
     } else {
-      // for encoded content, ensure extension is .save
       extension = "save"
     }
     
@@ -143,15 +164,35 @@ export function ExportSave({ saveData, lzw_encode, originalFilename }: ExportSav
 
           <TabsContent value="json">
             <div className="space-y-4">
-              <Textarea readOnly className="min-h-[300px] font-mono text-xs" value={jsonSave} />
+              <div className="relative">
+                <Textarea 
+                  className={`min-h-[300px] font-mono text-xs ${jsonError ? 'border-red-500' : ''}`} 
+                  value={jsonSave} 
+                  onChange={handleJsonChange}
+                />
+                {jsonError && (
+                  <div className="mt-2 text-red-500 text-sm flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    <span>Invalid JSON: {jsonError}</span>
+                  </div>
+                )}
+              </div>
 
               <div className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" className="flex-1" onClick={() => handleCopy(jsonSave)}>
+                <Button 
+                  variant="outline" 
+                  className="flex-1" 
+                  onClick={() => handleCopy(jsonSave)}
+                >
                   <Copy className="mr-2 h-4 w-4" />
                   Copy JSON
                 </Button>
 
-                <Button className="flex-1" onClick={() => handleDownload(jsonSave, "case-clicker-save.json")}>
+                <Button 
+                  className="flex-1" 
+                  onClick={() => handleDownload(jsonSave, "caseclicker.json")}
+                  disabled={!!jsonError}
+                >
                   <Download className="mr-2 h-4 w-4" />
                   Download JSON
                 </Button>
