@@ -10,12 +10,13 @@ import { Upload, FileUp, FilePlus } from "lucide-react"
 import { toast } from "sonner"
 
 interface SaveImporterProps {
-  onImport: (saveString: string) => void
+  onImport: (saveString: string, filename?: string) => void
   isMobileDevice?: boolean
 }
 
 export function SaveImporter({ onImport, isMobileDevice = false }: SaveImporterProps) {
   const [saveString, setSaveString] = useState("")
+  const [filename, setFilename] = useState("")
   
   const supportedExtensions = ['txt', 'json', 'save'];
 
@@ -29,6 +30,9 @@ export function SaveImporter({ onImport, isMobileDevice = false }: SaveImporterP
     // https://stackoverflow.com/a/53234855
     // taken from the lovely  mr jabacchetta from stackoverflow
     if (supportedExtensions.includes(extension)) {
+      // Store the filename
+      setFilename(file.name)
+      
       // upload as usual
       const reader = new FileReader()
       reader.onload = (event) => {
@@ -101,6 +105,7 @@ export function SaveImporter({ onImport, isMobileDevice = false }: SaveImporterP
     
     const newSaveString = JSON.stringify(newSave, null, 2);
     setSaveString(newSaveString);
+    setFilename("new-save.json");
     toast("New save created", {
       description: "A fresh save has been generated with default values."
     });
@@ -149,7 +154,7 @@ export function SaveImporter({ onImport, isMobileDevice = false }: SaveImporterP
 
             <Button
               className="flex-1 bg-gradient-to-r from-indigo-800 to-slate-900"
-              onClick={() => onImport(saveString)}
+              onClick={() => onImport(saveString, filename)}
               disabled={!saveString}
             >
               <Upload className="mr-2 h-4 w-4" />

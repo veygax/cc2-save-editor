@@ -7,13 +7,15 @@ import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Download, Copy, Check } from "lucide-react"
 import { toast } from "sonner"
+import { InfoTooltip } from "@/components/info-tooltip"
 
 interface ExportSaveProps {
   saveData: any
   lzw_encode: (data: string) => string
+  originalFilename?: string
 }
 
-export function ExportSave({ saveData, lzw_encode }: ExportSaveProps) {
+export function ExportSave({ saveData, lzw_encode, originalFilename }: ExportSaveProps) {
   const [encodedSave, setEncodedSave] = useState("")
   const [jsonSave, setJsonSave] = useState("")
   const [copied, setCopied] = useState(false)
@@ -32,6 +34,15 @@ export function ExportSave({ saveData, lzw_encode }: ExportSaveProps) {
     }
   }, [saveData, lzw_encode, toast])
 
+  const generateRandomHash = () => {
+    const chars = "0123456789abcdefghijklmnopqrstuvwxyz"
+    let result = ""
+    for (let i = 0; i < 7; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return result
+  }
+
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text)
     setCopied(true)
@@ -42,19 +53,45 @@ export function ExportSave({ saveData, lzw_encode }: ExportSaveProps) {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleDownload = (content: string, filename: string) => {
+  const handleDownload = (content: string, defaultFilename: string) => {
+    const randomHash = generateRandomHash()
+    
+    // use original filename if available, otherwise use default
+    let baseFilename
+    let extension
+    
+    if (originalFilename) {
+      const filenameParts = originalFilename.split(".")
+      extension = filenameParts.pop() || ""
+      baseFilename = filenameParts.join(".")
+    } else {
+      const filenameParts = defaultFilename.split(".")
+      extension = filenameParts.pop() || ""
+      baseFilename = filenameParts.join(".")
+    }
+    
+    // for JSON content, ensure extension is .json
+    if (content === jsonSave) {
+      extension = "json"
+    } else {
+      // for encoded content, ensure extension is .save
+      extension = "save"
+    }
+    
+    const hackedFilename = `${baseFilename}_hacked-${randomHash}.${extension}`
+
     const blob = new Blob([content], { type: "text/plain" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = filename
+    a.download = hackedFilename
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
 
     toast("Save downloaded", {
-      description: `Your save has been downloaded as ${filename}`,
+      description: `Your save has been downloaded as ${hackedFilename}`,
     })
   }
 
@@ -62,7 +99,10 @@ export function ExportSave({ saveData, lzw_encode }: ExportSaveProps) {
     <Card className="border border-blue-200">
       <CardHeader>
         <CardTitle>Export Save</CardTitle>
-        <CardDescription>Copy or download your modified save data</CardDescription>
+        <CardDescription>
+          Copy or download your modified save data
+          <InfoTooltip content="note: you must export as encoded format to import it into the game" />
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="encoded" className="w-full">
@@ -92,7 +132,7 @@ export function ExportSave({ saveData, lzw_encode }: ExportSaveProps) {
 
                 <Button
                   className="flex-1 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600"
-                  onClick={() => handleDownload(encodedSave, "case-clicker-save.save")}
+                  onClick={() => handleDownload(encodedSave, "caseclicker.save")}
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download Save

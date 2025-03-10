@@ -227,7 +227,7 @@ export function SaveEditor({ saveData, onSave, onUnload }: SaveEditorProps) {
             <div className="space-y-4">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Add new item (e.g. 'AWP | Dragon Lore (Factory New)')"
+                  placeholder="Add new item (e.g. 'AWP | Dragon Lore (Factory New)') note: be careful as you need to be precise witht the names"
                   value={newItem}
                   onChange={(e) => setNewItem(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addInventoryItem()}

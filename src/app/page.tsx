@@ -15,6 +15,7 @@ import Link from "next/link";
 export default function Home() {
   const [saveData, setSaveData] = useState<any>(null)
   const [originalSave, setOriginalSave] = useState<string>("")
+  const [originalFilename, setOriginalFilename] = useState<string>("")
   const [isMobileDevice, setIsMobileDevice] = useState(false)
   
   // used for importing saves because mobile devices don't support the accept attribute
@@ -30,9 +31,14 @@ export default function Home() {
     setIsMobileDevice(isMobile());
   }, []);
 
-  const handleImport = (saveString: string) => {
+  const handleImport = (saveString: string, filename?: string) => {
     try {
       let decoded;
+
+      // Store the original filename if provided
+      if (filename) {
+        setOriginalFilename(filename);
+      }
 
       try {
         decoded = JSON.parse(saveString);
@@ -59,7 +65,7 @@ export default function Home() {
 
   const handleReset = () => {
     if (originalSave) {
-      handleImport(originalSave)
+      handleImport(originalSave, originalFilename)
       toast("Save reset", {
         description: "Your save data has been reset to the original values.",
       })
@@ -122,6 +128,7 @@ export default function Home() {
   const handleUnloadSave = () => {
     setSaveData(null)
     setOriginalSave("")
+    setOriginalFilename("")
     toast("Save unloaded", {
       description: "Your save data has been unloaded. You can now import a new save.",
     })
@@ -199,7 +206,7 @@ export default function Home() {
                 )}
               </TabsContent>
               <TabsContent value="export" className="mt-4">
-                {saveData && <ExportSave saveData={saveData} lzw_encode={lzw_encode} />}
+                {saveData && <ExportSave saveData={saveData} lzw_encode={lzw_encode} originalFilename={originalFilename} />}
               </TabsContent>
             </Tabs>
           </header>
