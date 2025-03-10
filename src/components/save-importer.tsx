@@ -7,24 +7,45 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Upload, FileUp } from "lucide-react"
+import { toast } from "sonner"
 
 interface SaveImporterProps {
   onImport: (saveString: string) => void
+  isMobileDevice?: boolean
 }
 
-export function SaveImporter({ onImport }: SaveImporterProps) {
+export function SaveImporter({ onImport, isMobileDevice = false }: SaveImporterProps) {
   const [saveString, setSaveString] = useState("")
+  
+  const supportedExtensions = ['txt', 'json', 'save'];
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    
+    const filePath = file.name.split('.');
+    const extension = filePath[filePath.length - 1].toLowerCase();
+    
+    // https://stackoverflow.com/a/53234855
+    // taken from the lovely  mr jabacchetta from stackoverflow
+    if (supportedExtensions.includes(extension)) {
+      // Upload as usual
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const content = event.target?.result as string
+        setSaveString(content)
+      }
+      reader.readAsText(file)
+    } else {
+      toast("Unsupported file format", {
+        description: `Please upload a file with one of these extensions: ${supportedExtensions.join(', ')}`,
+      });
+      
+      // Reset input value
+      e.target.value = '';
 
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const content = event.target?.result as string
-      setSaveString(content)
+      return;
     }
-    reader.readAsText(file)
   }
 
   return (
@@ -54,7 +75,7 @@ export function SaveImporter({ onImport }: SaveImporterProps) {
               <input
                 id="file-upload"
                 type="file"
-                accept=".txt,.json,.save"
+                accept={isMobileDevice ? undefined : ".txt,.json,.save"}
                 className="hidden"
                 onChange={handleFileUpload}
               />

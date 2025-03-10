@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SaveImporter } from "@/components/save-importer";
 import { SaveEditor } from "@/components/save-editor";
 import { ExportSave } from "@/components/export-save";
@@ -15,6 +15,20 @@ import Link from "next/link";
 export default function Home() {
   const [saveData, setSaveData] = useState<any>(null)
   const [originalSave, setOriginalSave] = useState<string>("")
+  const [isMobileDevice, setIsMobileDevice] = useState(false)
+  
+  // used for importing saves because mobile devices don't support the accept attribute
+  const isMobile = () => {
+    const isMobileDevice = 
+      /Mobi|Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+      (navigator.userAgent.includes('Macintosh') && navigator.maxTouchPoints > 1); // hopefully a touch screen mac never drops lol
+    
+    return isMobileDevice;
+  }
+  
+  useEffect(() => {
+    setIsMobileDevice(isMobile());
+  }, []);
 
   const handleImport = (saveString: string) => {
     try {
@@ -149,6 +163,20 @@ export default function Home() {
                     </Button>
                   </>
                 )}
+                {process.env.NODE_ENV === 'development' && (
+                  <Button
+                    variant="outline"
+                    className="text-xs"
+                    onClick={() => {
+                      toast("Debug Info", {
+                        description: `UserAgent: ${navigator.userAgent}\nDetected as mobile: ${isMobileDevice ? 'Yes' : 'No'}`,
+                        duration: 10000,
+                      });
+                    }}
+                  >
+                    Device Info
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -161,7 +189,7 @@ export default function Home() {
               </TabsList>
               <TabsContent value="editor" className="mt-4">
                 {!saveData ? (
-                  <SaveImporter onImport={handleImport} />
+                  <SaveImporter onImport={handleImport} isMobileDevice={isMobileDevice} />
                 ) : (
                   <SaveEditor 
                     saveData={saveData} 
